@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Layout, Menu, Avatar, Dropdown, Button } from 'antd'
+import { Layout, Menu, Avatar, Dropdown, Button, Modal } from 'antd'
 import {
   DashboardOutlined,
   CodeOutlined,
@@ -8,14 +8,18 @@ import {
   FileTextOutlined,
   LogoutOutlined,
   UserOutlined,
+  LoginOutlined,
+  CloudSyncOutlined,
 } from '@ant-design/icons'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
+import QRCodeLogin from '@/pages/Login'
 
 const { Header, Sider, Content } = Layout
 
 const AppLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false)
+  const [loginOpen, setLoginOpen] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
   const { user, logout } = useAuth()
@@ -34,13 +38,16 @@ const AppLayout: React.FC = () => {
 
   const handleLogout = async () => {
     await logout()
-    navigate('/login')
   }
 
-  const userMenuItems = [
-    { key: 'profile', icon: <UserOutlined />, label: '个人信息' },
-    { key: 'logout', icon: <LogoutOutlined />, label: '退出登录', onClick: handleLogout },
-  ]
+  const userMenuItems = user
+    ? [
+        { key: 'sync', icon: <CloudSyncOutlined />, label: '云端同步' },
+        { key: 'logout', icon: <LogoutOutlined />, label: '退出登录', onClick: handleLogout },
+      ]
+    : [
+        { key: 'login', icon: <LoginOutlined />, label: '登录同步', onClick: () => setLoginOpen(true) },
+      ]
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
@@ -82,6 +89,7 @@ const AppLayout: React.FC = () => {
             <Button type="text" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <Avatar size="small" icon={<UserOutlined />} src={user?.avatar_url} />
               <span>{user?.nickname || '未登录'}</span>
+              {!user && <CloudSyncOutlined style={{ color: '#1677ff', fontSize: 12 }} />}
             </Button>
           </Dropdown>
         </Header>
@@ -89,6 +97,17 @@ const AppLayout: React.FC = () => {
           <Outlet />
         </Content>
       </Layout>
+
+      {loginOpen && (
+        <Modal
+          open={loginOpen}
+          onCancel={() => setLoginOpen(false)}
+          footer={null}
+          title="登录以启用云端同步"
+        >
+          <QRCodeLogin onSuccess={() => setLoginOpen(false)} />
+        </Modal>
+      )}
     </Layout>
   )
 }

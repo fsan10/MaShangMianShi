@@ -56,3 +56,8 @@ export const mistakesApi = {
   toggleFavorite: (id: number) => api.post(`/mistakes/${id}/favorite`),
   rejoin: (id: number) => api.post(`/mistakes/${id}/rejoin`),
 }
+
+export const syncApi = {
+  upload: (data: Record<string, unknown>) => api.post('/sync/upload', { data }),
+  download: () => api.get('/sync/download'),
+}

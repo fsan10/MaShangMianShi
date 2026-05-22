@@ -1,30 +1,55 @@
 import React, { useEffect, useState } from 'react'
-import { Card, Row, Col, Progress, Button, Tag, Tabs, Modal, List } from 'antd'
+import { Card, Row, Col, Progress, Button, Tag, Tabs, Modal, List, Empty } from 'antd'
 import { ArrowRightOutlined, ThunderboltOutlined } from '@ant-design/icons'
-import { reviewApi } from '@/api'
+import { localStore } from '@/utils/localStore'
+import { statsApi } from '@/api'
 
 const ReviewPage: React.FC = () => {
   const [knowledgePoints, setKnowledgePoints] = useState<any[]>([])
-  const [weakPoints, setWeakPoints] = useState<any[]>([])
+  const [masteries, setMasteries] = useState(localStore.getMasteries())
   const [activeTab, setActiveTab] = useState('all')
-  const [weakModalOpen, setWeakModalOpen] = useState(false)
 
   useEffect(() => {
     loadKnowledgePoints()
-    reviewApi.weakPoints().then((res) => setWeakPoints(res.data))
-  }, [activeTab])
+  }, [])
 
   const loadKnowledgePoints = async () => {
-    const res = await reviewApi.knowledgePoints()
-    setKnowledgePoints(res.data)
+    try {
+      const res = await statsApi.knowledgeRanking({ limit: 100 })
+      setKnowledgePoints(res.data)
+    } catch {
+      setKnowledgePoints([])
+    }
   }
 
-  const handleStart = async (kpId: number) => {
-    await reviewApi.start(kpId)
+  const getMastery = (kpId: number) => {
+    return masteries.find((m) => m.knowledgePointId === kpId)
+  }
+
+  const handleStart = (kpId: number, kpName: string) => {
+    const existing = getMastery(kpId)
+    if (!existing) {
+      localStore.updateMastery(kpId, {
+        knowledgePointName: kpName,
+        status: 'learning',
+        correctCount: 0,
+        totalCount: 0,
+        lastStudyAt: new Date().toISOString(),
+      })
+    }
+    setMasteries(localStore.getMasteries())
   }
 
   const totalQuestions = knowledgePoints.reduce((sum, kp) => sum + (kp.question_count || 0), 0)
-  const masteredQuestions = knowledgePoints.filter((kp) => kp.mastery_status === 'mastered').length
+  const masteredCount = masteries.filter((m) => m.status === 'mastered').length
+
+  const filteredKPs = activeTab === 'all'
+    ? knowledgePoints
+    : knowledgePoints.filter((kp) => {
+        const stacks = kp.tech_stack || []
+        const tabMap: Record<string, string> = { ds: '数据结构', os: '操作系统', cn: '计算机网络', co: '组成原理' }
+        return stacks.some((s: string) => s.includes(tabMap[activeTab] || ''))
+      })
 
   return (
     <div style={{ padding: 24 }}>
@@ -37,25 +62,16 @@ const ReviewPage: React.FC = () => {
         </Col>
         <Col span={8}>
           <Card>
-            <div style={{ fontSize: 24, fontWeight: 'bold' }}>{masteredQuestions}</div>
-            <div style={{ color: '#999' }}>已掌握题数</div>
+            <div style={{ fontSize: 24, fontWeight: 'bold' }}>{masteredCount}</div>
+            <div style={{ color: '#999' }}>已掌握</div>
           </Card>
         </Col>
         <Col span={8}>
           <Card>
-            <Button
-              type="primary"
-              icon={<ThunderboltOutlined />}
-              onClick={() => setWeakModalOpen(true)}
-              style={{ marginBottom: 8, width: '100%' }}
-            >
+            <Button type="primary" icon={<ThunderboltOutlined />} block style={{ marginBottom: 8 }}>
               查看薄弱项
             </Button>
-            <Button
-              icon={<ArrowRightOutlined />}
-              onClick={() => {}}
-              style={{ width: '100%' }}
-            >
+            <Button icon={<ArrowRightOutlined />} block>
               开始智能推荐
             </Button>
           </Card>
@@ -74,51 +90,42 @@ const ReviewPage: React.FC = () => {
         ]}
       />
 
-      <Row gutter={[16, 16]}>
-        {knowledgePoints.map((kp) => (
-          <Col span={8} key={kp.id}>
-            <Card hoverable>
-              <div style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 8 }}>{kp.name}</div>
-              <div style={{ marginBottom: 8 }}>
-                {kp.tech_stack?.map((ts: string) => (
-                  <Tag key={ts} style={{ marginBottom: 4 }}>{ts}</Tag>
-                ))}
-              </div>
-              <div style={{ color: '#666', marginBottom: 4 }}>
-                {kp.question_count} 真题 · {kp.correct_count || 0} 做题
-              </div>
-              <Progress percent={kp.percentage || 0} size="small" />
-              <Button
-                type="primary"
-                block
-                style={{ marginTop: 12 }}
-                onClick={() => handleStart(kp.id)}
-              >
-                开始巩固 →
-              </Button>
-            </Card>
-          </Col>
-        ))}
-      </Row>
-
-      <Modal
-        title="薄弱项分析"
-        open={weakModalOpen}
-        onCancel={() => setWeakModalOpen(false)}
-        footer={null}
-      >
-        <List
-          dataSource={weakPoints}
-          renderItem={(item: any) => (
-            <List.Item>
-              <List.Item.Meta
-                title={`知识点 #${item.knowledge_point_id}`}
-                description={`优先级: ${item.priority} | 原因: ${item.weak_reason || '正确率低'}`}
-              />
-            </List.Item>
-          )}
-        />
-      </Modal>
+      {filteredKPs.length > 0 ? (
+        <Row gutter={[16, 16]}>
+          {filteredKPs.map((kp: any) => {
+            const mastery = getMastery(kp.id || kp.rank)
+            const percentage = mastery && mastery.totalCount > 0
+              ? Math.round((mastery.correctCount / mastery.totalCount) * 100)
+              : 0
+            return (
+              <Col span={8} key={kp.id || kp.rank}>
+                <Card hoverable>
+                  <div style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 8 }}>{kp.name}</div>
+                  <div style={{ marginBottom: 8 }}>
+                    {kp.tech_stack?.map((ts: string) => (
+                      <Tag key={ts} style={{ marginBottom: 4 }}>{ts}</Tag>
+                    ))}
+                  </div>
+                  <div style={{ color: '#666', marginBottom: 4 }}>
+                    {kp.question_count} 真题 · {mastery?.correctCount || 0} 做题
+                  </div>
+                  <Progress percent={percentage} size="small" />
+                  <Button
+                    type="primary"
+                    block
+                    style={{ marginTop: 12 }}
+                    onClick={() => handleStart(kp.id || kp.rank, kp.name)}
+                  >
+                    开始巩固 →
+                  </Button>
+                </Card>
+              </Col>
+            )
+          })}
+        </Row>
+      ) : (
+        <Empty description="暂无知识点数据" />
+      )}
     </div>
   )
 }

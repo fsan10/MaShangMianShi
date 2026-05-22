@@ -7,40 +7,77 @@ import {
   RedoOutlined,
   ArrowRightOutlined,
 } from '@ant-design/icons'
-import { mistakesApi } from '@/api'
+import { localStore, MistakeItem } from '@/utils/localStore'
 
 const MistakesPage: React.FC = () => {
-  const [activeList, setActiveList] = useState<any[]>([])
-  const [masteredList, setMasteredList] = useState<any[]>([])
+  const [activeList, setActiveList] = useState<MistakeItem[]>([])
+  const [masteredList, setMasteredList] = useState<MistakeItem[]>([])
   const [activeTab, setActiveTab] = useState('active')
 
   useEffect(() => {
     loadData()
   }, [])
 
-  const loadData = async () => {
-    const [activeRes, masteredRes] = await Promise.all([
-      mistakesApi.active(),
-      mistakesApi.mastered(),
-    ])
-    setActiveList(activeRes.data)
-    setMasteredList(masteredRes.data)
+  const loadData = () => {
+    const all = localStore.getMistakes()
+    setActiveList(all.filter((m) => m.status === 'active'))
+    setMasteredList(all.filter((m) => m.status === 'mastered'))
   }
 
-  const handleToggleFavorite = async (id: number) => {
-    await mistakesApi.toggleFavorite(id)
-    loadData()
+  const handleToggleFavorite = (questionId: number) => {
+    const all = localStore.getMistakes()
+    const item = all.find((m) => m.questionId === questionId)
+    if (item) {
+      item.isFavorite = !item.isFavorite
+      localStore.setMistakes(all)
+      loadData()
+    }
   }
 
-  const handleRemove = async (id: number) => {
-    await mistakesApi.remove(id)
+  const handleRemove = (questionId: number) => {
+    localStore.removeMistake(questionId)
     message.success('已移除')
     loadData()
   }
 
-  const handleRejoin = async (id: number) => {
-    await mistakesApi.rejoin(id)
-    message.success('已重新加入错题本')
+  const handleRejoin = (questionId: number) => {
+    const all = localStore.getMistakes()
+    const item = all.find((m) => m.questionId === questionId)
+    if (item) {
+      item.status = 'active'
+      item.consecutiveCorrect = 0
+      item.masteredAt = null
+      localStore.setMistakes(all)
+      message.success('已重新加入错题本')
+      loadData()
+    }
+  }
+
+  const handleAnswer = (questionId: number, isCorrect: boolean) => {
+    const all = localStore.getMistakes()
+    const item = all.find((m) => m.questionId === questionId)
+    if (!item) return
+
+    if (isCorrect) {
+      item.consecutiveCorrect += 1
+      if (item.consecutiveCorrect >= 3) {
+        item.status = 'mastered'
+        item.masteredAt = new Date().toISOString()
+        message.success('连续答对3次，已出本！')
+      }
+    } else {
+      item.mistakeCount += 1
+      item.consecutiveCorrect = 0
+      item.lastMistakeAt = new Date().toISOString()
+    }
+    item.lastAnswerAt = new Date().toISOString()
+    localStore.setMistakes(all)
+
+    const stats = localStore.getStats()
+    stats.totalAnswered += 1
+    if (isCorrect) stats.totalCorrect += 1
+    localStore.setStats(stats)
+
     loadData()
   }
 
@@ -60,43 +97,41 @@ const MistakesPage: React.FC = () => {
               children: activeList.length > 0 ? (
                 <List
                   dataSource={activeList}
-                  renderItem={(item: any) => (
+                  renderItem={(item: MistakeItem) => (
                     <List.Item
                       actions={[
-                        <Button
-                          size="small"
-                          type="link"
-                          icon={<ArrowRightOutlined />}
-                          onClick={() => mistakesApi.review(item.id)}
-                        >
-                          去巩固
+                        <Button size="small" type="primary" onClick={() => handleAnswer(item.questionId, true)}>
+                          答对
+                        </Button>,
+                        <Button size="small" danger onClick={() => handleAnswer(item.questionId, false)}>
+                          答错
                         </Button>,
                         <Button
                           size="small"
                           type="link"
                           danger
                           icon={<DeleteOutlined />}
-                          onClick={() => handleRemove(item.id)}
+                          onClick={() => handleRemove(item.questionId)}
                         >
                           移除
                         </Button>,
                         <Button
                           size="small"
                           type="link"
-                          icon={item.is_favorite ? <StarFilled style={{ color: '#faad14' }} /> : <StarOutlined />}
-                          onClick={() => handleToggleFavorite(item.id)}
+                          icon={item.isFavorite ? <StarFilled style={{ color: '#faad14' }} /> : <StarOutlined />}
+                          onClick={() => handleToggleFavorite(item.questionId)}
                         >
-                          {item.is_favorite ? '取消收藏' : '收藏'}
+                          {item.isFavorite ? '取消' : '收藏'}
                         </Button>,
                       ]}
                     >
                       <List.Item.Meta
-                        title={`题目 #${item.question_id}`}
+                        title={item.questionContent || `题目 #${item.questionId}`}
                         description={
                           <Space>
-                            <span>错误次数：{item.mistake_count} 次</span>
-                            <span>连续正确：{item.consecutive_correct} 次</span>
-                            <span>最后错误：{item.last_mistake_at?.split('T')[0]}</span>
+                            <span>错误次数：{item.mistakeCount} 次</span>
+                            <span>连续正确：{item.consecutiveCorrect} 次</span>
+                            <span>最后错误：{item.lastMistakeAt?.split('T')[0]}</span>
                           </Space>
                         }
                       />
@@ -104,7 +139,7 @@ const MistakesPage: React.FC = () => {
                   )}
                 />
               ) : (
-                <Empty description="暂无活跃错题" />
+                <Empty description="暂无活跃错题，做题后答错的会自动加入" />
               ),
             },
             {
@@ -113,25 +148,25 @@ const MistakesPage: React.FC = () => {
               children: masteredList.length > 0 ? (
                 <List
                   dataSource={masteredList}
-                  renderItem={(item: any) => (
+                  renderItem={(item: MistakeItem) => (
                     <List.Item
                       actions={[
                         <Button
                           size="small"
                           type="link"
                           icon={<RedoOutlined />}
-                          onClick={() => handleRejoin(item.id)}
+                          onClick={() => handleRejoin(item.questionId)}
                         >
                           重新加入
                         </Button>,
                       ]}
                     >
                       <List.Item.Meta
-                        title={`题目 #${item.question_id}`}
+                        title={item.questionContent || `题目 #${item.questionId}`}
                         description={
                           <Space>
                             <Tag color="green">已掌握</Tag>
-                            <span>出本时间：{item.mastered_at?.split('T')[0]}</span>
+                            <span>出本时间：{item.masteredAt?.split('T')[0]}</span>
                           </Space>
                         }
                       />

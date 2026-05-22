@@ -7,32 +7,69 @@ import {
   BookOutlined,
 } from '@ant-design/icons'
 import ReactECharts from 'echarts-for-react'
-import { progressApi } from '@/api'
+import { localStore } from '@/utils/localStore'
+import dayjs from 'dayjs'
 
 const ProgressPage: React.FC = () => {
-  const [overview, setOverview] = useState<any>(null)
-  const [chapters, setChapters] = useState<any[]>([])
-  const [radar, setRadar] = useState<any[]>([])
-  const [checkins, setCheckins] = useState<any[]>([])
+  const [stats, setStats] = useState(localStore.getStats())
+  const [masteries, setMasteries] = useState(localStore.getMasteries())
+  const [checkins, setCheckins] = useState(localStore.getCheckins())
 
   useEffect(() => {
-    progressApi.overview().then((res) => setOverview(res.data))
-    progressApi.chapters().then((res) => setChapters(res.data))
-    progressApi.radar().then((res) => setRadar(res.data))
-    progressApi.checkins().then((res) => setCheckins(res.data))
+    setStats(localStore.getStats())
+    setMasteries(localStore.getMasteries())
+    setCheckins(localStore.getCheckins())
   }, [])
+
+  const accuracy = stats.totalAnswered > 0 ? Math.round((stats.totalCorrect / stats.totalAnswered) * 100) : 0
+
+  const streakDays = (() => {
+    if (!stats.lastStudyDate) return 0
+    const sorted = [...checkins].sort((a, b) => b.date.localeCompare(a.date))
+    let streak = 0
+    let current = dayjs().format('YYYY-MM-DD')
+    for (const c of sorted) {
+      if (c.date === current) {
+        streak++
+        current = dayjs(current).subtract(1, 'day').format('YYYY-MM-DD')
+      } else if (c.date < current) {
+        break
+      }
+    }
+    return streak
+  })()
+
+  const categoryMap: Record<string, { total: number; mastered: number }> = {}
+  masteries.forEach((m) => {
+    const cat = m.knowledgePointName || '未分类'
+    if (!categoryMap[cat]) categoryMap[cat] = { total: 0, mastered: 0 }
+    categoryMap[cat].total += m.totalCount
+    if (m.status === 'mastered') categoryMap[cat].mastered += m.totalCount
+  })
+
+  const chapters = Object.entries(categoryMap).map(([name, data]) => ({
+    name,
+    total: data.total,
+    mastered: data.mastered,
+    percentage: data.total > 0 ? Math.round((data.mastered / data.total) * 100) : 0,
+  }))
+
+  const radarData = Object.entries(categoryMap).map(([name, data]) => ({
+    name,
+    score: data.total > 0 ? Math.round((data.mastered / data.total) * 100) : 0,
+  }))
 
   const radarOption = {
     tooltip: {},
     radar: {
-      indicator: radar.map((r) => ({ name: r.category_name, max: 100 })),
+      indicator: radarData.map((r) => ({ name: r.name, max: 100 })),
     },
     series: [
       {
         type: 'radar',
         data: [
           {
-            value: radar.map((r) => r.score),
+            value: radarData.map((r) => r.score),
             name: '掌握程度',
             areaStyle: { opacity: 0.3 },
           },
@@ -41,18 +78,15 @@ const ProgressPage: React.FC = () => {
     ],
   }
 
-  const checkinDates = new Set(checkins.map((c) => c.checkin_date))
-
+  const checkinDates = new Set(checkins.map((c) => c.date))
   const generateCalendarData = () => {
-    const now = new Date()
-    const year = now.getFullYear()
+    const year = new Date().getFullYear()
     const data: [string, number][] = []
     for (let m = 0; m < 12; m++) {
       const daysInMonth = new Date(year, m + 1, 0).getDate()
       for (let d = 1; d <= daysInMonth; d++) {
         const dateStr = `${year}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
-        const count = checkinDates.has(dateStr) ? 1 : 0
-        data.push([dateStr, count])
+        data.push([dateStr, checkinDates.has(dateStr) ? 1 : 0])
       }
     }
     return data
@@ -93,50 +127,34 @@ const ProgressPage: React.FC = () => {
       <Row gutter={16} style={{ marginBottom: 24 }}>
         <Col span={6}>
           <Card>
-            <Statistic
-              title="已做题数"
-              value={overview?.total_answered || 0}
-              prefix={<BookOutlined />}
-              suffix={`/ ${overview?.total_answered || 0}`}
-            />
+            <Statistic title="已做题数" value={stats.totalAnswered} prefix={<BookOutlined />} />
           </Card>
         </Col>
         <Col span={6}>
           <Card>
-            <Statistic
-              title="正确率"
-              value={overview?.accuracy || 0}
-              suffix="%"
-              prefix={<CheckCircleOutlined />}
-            />
+            <Statistic title="正确率" value={accuracy} suffix="%" prefix={<CheckCircleOutlined />} />
           </Card>
         </Col>
         <Col span={6}>
           <Card>
-            <Statistic
-              title="连续打卡"
-              value={overview?.streak_days || 0}
-              suffix="天"
-              prefix={<FireOutlined />}
-            />
+            <Statistic title="连续打卡" value={streakDays} suffix="天" prefix={<FireOutlined />} />
           </Card>
         </Col>
         <Col span={6}>
           <Card>
-            <Statistic
-              title="已掌握"
-              value={overview?.mastered_count || 0}
-              suffix="个"
-              prefix={<TrophyOutlined />}
-            />
+            <Statistic title="已掌握" value={stats.masteredCount} suffix="个" prefix={<TrophyOutlined />} />
           </Card>
         </Col>
       </Row>
 
       <Row gutter={16} style={{ marginBottom: 24 }}>
         <Col span={12}>
-          <Card title="4科能力雷达">
-            <ReactECharts option={radarOption} style={{ height: 300 }} />
+          <Card title="能力雷达">
+            {radarData.length > 0 ? (
+              <ReactECharts option={radarOption} style={{ height: 300 }} />
+            ) : (
+              <div style={{ textAlign: 'center', padding: 40, color: '#999' }}>开始做题后显示雷达图</div>
+            )}
           </Card>
         </Col>
         <Col span={12}>
@@ -147,15 +165,19 @@ const ProgressPage: React.FC = () => {
       </Row>
 
       <Card title="章节进度">
-        {chapters.map((ch) => (
-          <div key={ch.category_name} style={{ marginBottom: 16 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-              <span>{ch.category_name}</span>
-              <span>{ch.percentage}% ({ch.answered_questions}/{ch.total_questions}题)</span>
+        {chapters.length > 0 ? (
+          chapters.map((ch) => (
+            <div key={ch.name} style={{ marginBottom: 16 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                <span>{ch.name}</span>
+                <span>{ch.percentage}% ({ch.mastered}/{ch.total}题)</span>
+              </div>
+              <Progress percent={ch.percentage} strokeColor="#1677ff" />
             </div>
-            <Progress percent={ch.percentage} strokeColor="#1677ff" />
-          </div>
-        ))}
+          ))
+        ) : (
+          <div style={{ textAlign: 'center', padding: 40, color: '#999' }}>开始做题后显示进度</div>
+        )}
       </Card>
     </div>
   )
