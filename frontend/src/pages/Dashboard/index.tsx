@@ -200,10 +200,6 @@ const Dashboard: React.FC = () => {
     ],
   }
 
-  const sidebarProgress = data?.total_knowledge_points
-    ? Math.round((data.knowledge_ranking?.filter((k: any) => k.question_count >= 5).length || 0) / data.total_knowledge_points * 100)
-    : 0
-
   return (
     <div>
       <div className="page-header">
@@ -213,43 +209,27 @@ const Dashboard: React.FC = () => {
 
       <div style={{ padding: '24px 32px' }}>
         <Row gutter={16} style={{ marginBottom: 24 }}>
-          <Col span={4}>
+          <Col span={8}>
             <div className="stat-card blue">
               <div className="stat-value">{data?.total_questions || 0}</div>
               <div className="stat-label">真题总量</div>
               <div className="stat-desc">2009 - 2026 年 18 年</div>
             </div>
           </Col>
-          <Col span={4}>
+          <Col span={8}>
             <div className="stat-card green">
               <div className="stat-value">{data?.total_knowledge_points || 0}</div>
               <div className="stat-label">收录知识点</div>
               <div className="stat-desc">实际考察 165 个</div>
             </div>
           </Col>
-          <Col span={4}>
+          <Col span={8}>
             <div className="stat-card red">
               <div className="stat-value">
                 {data?.knowledge_ranking?.filter((k: any) => k.question_count >= 10).length || 0}
               </div>
               <div className="stat-label">高频考点</div>
               <div className="stat-desc">考察 ≥ 10 年</div>
-            </div>
-          </Col>
-          <Col span={4}>
-            <div className="stat-card orange">
-              <div className="stat-value">
-                {data?.knowledge_ranking?.filter((k: any) => k.question_count >= 3).length || 0}
-              </div>
-              <div className="stat-label">近年热点</div>
-              <div className="stat-desc">2021 年后考过</div>
-            </div>
-          </Col>
-          <Col span={4}>
-            <div className="stat-card purple">
-              <div className="stat-value">{sidebarProgress}%</div>
-              <div className="stat-label">大纲覆盖率</div>
-              <div className="stat-desc">仅 24 个从未考察</div>
             </div>
           </Col>
         </Row>
@@ -277,51 +257,13 @@ const Dashboard: React.FC = () => {
 
           <Col span={6}>
             <div className="sidebar-card">
-              <div className="card-title">
-                <span>大纲覆盖</span>
-                <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{sidebarProgress}% 已被考察</span>
-              </div>
-              <div className="progress-bar" style={{ marginBottom: 12 }}>
-                <div className="progress-fill" style={{ width: `${sidebarProgress}%` }} />
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
-                <span style={{ color: 'var(--success)' }}>● 已考察 {data?.knowledge_ranking?.filter((k: any) => k.question_count >= 1).length || 0}</span>
-                <span style={{ color: 'var(--text-muted)' }}>● 从未考察 24</span>
-              </div>
-            </div>
-
-            <div className="sidebar-card">
               <div className="card-title">技术栈分布</div>
-              <ReactECharts option={techChartOption} style={{ height: 220 }} />
+              <ReactECharts option={techChartOption} style={{ height: 260 }} />
             </div>
 
             <div className="sidebar-card">
               <div className="card-title">难度分级</div>
-              <ReactECharts option={diffChartOption} style={{ height: 220 }} />
-            </div>
-
-            <div className="sidebar-card">
-              <div className="card-title">大纲漏网</div>
-              <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8 }}>
-                从未在真题中出现，可大胆略读
-              </div>
-              {['IP 组播', '轮询访问/令牌', '移动 IP', '网络分类', '物理层设备'].map((item, i) => (
-                <div
-                  key={item}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    padding: '8px 0',
-                    borderBottom: i < 4 ? '1px solid var(--border-color)' : 'none',
-                    fontSize: 13,
-                  }}
-                >
-                  <span style={{ color: 'var(--warning)', fontSize: 12 }}>▎</span>
-                  <span style={{ flex: 1, color: 'var(--text-primary)' }}>{item}</span>
-                  <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>计算机网络</span>
-                </div>
-              ))}
+              <ReactECharts option={diffChartOption} style={{ height: 260 }} />
             </div>
           </Col>
         </Row>
