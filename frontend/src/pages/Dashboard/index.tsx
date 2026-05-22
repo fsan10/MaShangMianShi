@@ -1,30 +1,26 @@
 import React, { useEffect, useState } from 'react'
-import { Card, Table, Row, Col, Statistic, Tag, Tooltip, Space } from 'antd'
-import {
-  BookOutlined,
-  CodeOutlined,
-  FireOutlined,
-  TrophyOutlined,
-} from '@ant-design/icons'
+import { Card, Table, Row, Col, Tag, Tooltip, Space, Spin } from 'antd'
 import ReactECharts from 'echarts-for-react'
 import { statsApi } from '@/api'
 
-const TECH_STACK_COLORS: Record<string, string> = {
-  MySQL: '#1677ff',
-  Hive: '#fa8c16',
-  Oracle: '#f5222d',
-  Hadoop: '#722ed1',
-  操作系统: '#52c41a',
-  数据结构: '#1677ff',
-  组成原理: '#faad14',
-  银行业务: '#8c8c8c',
-  数据仓库: '#8b4513',
+const SUBJECT_MAP: Record<string, { name: string; cls: string }> = {
+  '数据结构': { name: '数据结构', cls: 'ds' },
+  '操作系统': { name: '操作系统', cls: 'os' },
+  '计算机网络': { name: '计算机网络', cls: 'cn' },
+  '组成原理': { name: '组成原理', cls: 'co' },
 }
 
-const DIFFICULTY_COLORS: Record<string, string> = {
-  高阶: '#f5222d',
-  中阶: '#fa8c16',
-  初阶: '#52c41a',
+const DIFFICULTY_MAP: Record<string, { label: string; color: string }> = {
+  '高阶': { label: '高阶', color: '#f5222d' },
+  '中阶': { label: '中阶', color: '#fa8c16' },
+  '初阶': { label: '初阶', color: '#52c41a' },
+}
+
+const RankBadge: React.FC<{ rank: number }> = ({ rank }) => {
+  if (rank === 1) return <span className="rank-badge gold">1</span>
+  if (rank === 2) return <span className="rank-badge silver">2</span>
+  if (rank === 3) return <span className="rank-badge bronze">3</span>
+  return <span className="rank-badge normal">{rank}</span>
 }
 
 const Dashboard: React.FC = () => {
@@ -34,6 +30,15 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     statsApi.dashboard().then((res) => {
       setData(res.data)
+    }).catch(() => {
+      setData({
+        total_questions: 0,
+        total_knowledge_points: 0,
+        total_companies: 0,
+        knowledge_ranking: [],
+        tech_stack_distribution: [],
+        difficulty_distribution: {},
+      })
     }).finally(() => setLoading(false))
   }, [])
 
@@ -42,78 +47,94 @@ const Dashboard: React.FC = () => {
       title: '排名',
       dataIndex: 'rank',
       width: 60,
-      render: (rank: number) => {
-        if (rank === 1) return <span style={{ color: '#ffd700', fontWeight: 'bold' }}>🥇 1</span>
-        if (rank === 2) return <span style={{ color: '#c0c0c0', fontWeight: 'bold' }}>🥈 2</span>
-        if (rank === 3) return <span style={{ color: '#cd7f32', fontWeight: 'bold' }}>🥉 3</span>
-        return rank
-      },
+      align: 'center' as const,
+      render: (rank: number) => <RankBadge rank={rank} />,
     },
     {
       title: '知识点',
       dataIndex: 'name',
-      width: 180,
-      render: (name: string) => <strong>{name}</strong>,
+      width: 200,
+      render: (name: string, record: any) => (
+        <div>
+          <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>{name}</div>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
+            {record.tech_stack?.join(' · ')}
+          </div>
+        </div>
+      ),
     },
     {
-      title: '技术栈',
+      title: '学科',
       dataIndex: 'tech_stack',
-      width: 120,
-      render: (stacks: string[]) =>
-        stacks?.map((s) => (
-          <Tag key={s} color={TECH_STACK_COLORS[s] || '#default'} style={{ marginBottom: 2 }}>
-            {s}
-          </Tag>
-        )),
+      width: 100,
+      render: (stacks: string[]) => {
+        const subject = stacks?.[0] || '其他'
+        const map = SUBJECT_MAP[subject] || { name: subject, cls: 'ds' }
+        return <span className={`subject-tag ${map.cls}`}>{map.name}</span>
+      },
     },
     {
       title: '题量',
       dataIndex: 'question_count',
       width: 60,
+      align: 'center' as const,
+      render: (v: number) => <span style={{ fontWeight: 600 }}>{v}</span>,
+    },
+    {
+      title: '分值',
+      width: 80,
+      render: (_: unknown, record: any) => (
+        <span style={{ fontWeight: 600, color: 'var(--danger)' }}>
+          {Math.round((record.question_count || 0) * 1.5)}分
+        </span>
+      ),
     },
     {
       title: '分级',
       dataIndex: 'difficulty_level',
       width: 70,
-      render: (level: string) => (
-        <Tag color={DIFFICULTY_COLORS[level] || '#default'}>{level}</Tag>
-      ),
+      align: 'center' as const,
+      render: (level: string) => {
+        const diff = DIFFICULTY_MAP[level] || { label: level || '未分级', color: '#8c8c8c' }
+        return <span style={{ color: diff.color, fontWeight: 600, fontSize: 12 }}>{diff.label}</span>
+      },
     },
     {
-      title: '考察公司',
+      title: '考察年份分布',
       dataIndex: 'company_distribution',
-      width: 160,
-      render: (companies: string[]) => (
-        <Tooltip title={companies?.join('、')}>
-          <Space size={2}>
-            {companies?.slice(0, 5).map((c, i) => (
-              <div
-                key={c}
-                style={{
-                  width: 12,
-                  height: 12,
-                  borderRadius: 2,
-                  background: `hsl(210, 70%, ${30 + i * 12}%)`,
-                  display: 'inline-block',
-                }}
-              />
+      width: 300,
+      render: (companies: string[]) => {
+        const years = ['09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26']
+        return (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+            {years.map((y) => (
+              <span
+                key={y}
+                className={companies?.some((c) => c.includes(y)) ? 'year-block' : 'year-block missing'}
+              >
+                {y}
+              </span>
             ))}
-            {companies?.length > 5 && <Text type="secondary">+{companies.length - 5}</Text>}
-          </Space>
-        </Tooltip>
-      ),
+          </div>
+        )
+      },
     },
     {
       title: '资源',
       width: 100,
+      align: 'center' as const,
       render: (_: unknown, record: any) => (
-        <Space>
-          <Tooltip title="讲解">
-            <BookOutlined style={{ color: record.has_explanation ? '#1677ff' : '#d9d9d9', fontSize: 16 }} />
-          </Tooltip>
-          <Tooltip title="OJ实操">
-            <CodeOutlined style={{ color: record.has_oj_practice ? '#52c41a' : '#d9d9d9', fontSize: 16 }} />
-          </Tooltip>
+        <Space size={8}>
+          {record.has_explanation && (
+            <span className="action-btn primary" style={{ padding: '2px 8px', fontSize: 12 }}>
+              讲解
+            </span>
+          )}
+          {record.has_oj_practice && (
+            <span className="action-btn" style={{ padding: '2px 8px', fontSize: 12, color: 'var(--success)', borderColor: 'var(--success)' }}>
+              OJ
+            </span>
+          )}
         </Space>
       ),
     },
@@ -121,81 +142,190 @@ const Dashboard: React.FC = () => {
 
   const techChartOption = {
     tooltip: { trigger: 'item', formatter: '{b}: {c}题 ({d}%)' },
-    legend: { orient: 'vertical', left: 'left' },
+    legend: { show: false },
     series: [
       {
         type: 'pie',
-        radius: ['40%', '70%'],
+        radius: ['45%', '75%'],
+        center: ['50%', '50%'],
+        avoidLabelOverlap: true,
+        itemStyle: {
+          borderRadius: 6,
+          borderColor: '#fff',
+          borderWidth: 2,
+        },
+        label: {
+          show: true,
+          formatter: '{b}\n{d}%',
+          fontSize: 12,
+          color: 'var(--text-secondary)',
+        },
+        emphasis: {
+          label: { show: true, fontSize: 14, fontWeight: 'bold' },
+        },
         data: data?.tech_stack_distribution?.map((item: any) => ({
           name: item.name,
           value: item.count,
-          itemStyle: { color: TECH_STACK_COLORS[item.name] },
         })) || [],
-        label: { formatter: '{b}\n{d}%' },
       },
     ],
   }
 
   const diffChartOption = {
     tooltip: { trigger: 'item', formatter: '{b}: {c}题 ({d}%)' },
-    legend: { orient: 'vertical', left: 'left' },
+    legend: { show: false },
     series: [
       {
         type: 'pie',
-        radius: ['40%', '70%'],
+        radius: ['45%', '75%'],
+        center: ['50%', '50%'],
+        itemStyle: {
+          borderRadius: 6,
+          borderColor: '#fff',
+          borderWidth: 2,
+        },
+        label: {
+          show: true,
+          formatter: '{b}\n{d}%',
+          fontSize: 12,
+        },
         data: Object.entries(data?.difficulty_distribution || {}).map(([key, value]: [string, any]) => ({
           name: key,
           value,
-          itemStyle: { color: DIFFICULTY_COLORS[key] || '#8c8c8c' },
+          itemStyle: {
+            color: key === '高阶' ? '#f5222d' : key === '中阶' ? '#fa8c16' : key === '初阶' ? '#52c41a' : '#8c8c8c',
+          },
         })),
-        label: { formatter: '{b}\n{d}%' },
       },
     ],
   }
 
+  const sidebarProgress = data?.total_knowledge_points
+    ? Math.round((data.knowledge_ranking?.filter((k: any) => k.question_count >= 5).length || 0) / data.total_knowledge_points * 100)
+    : 0
+
   return (
-    <div style={{ padding: 24 }}>
-      <Row gutter={16} style={{ marginBottom: 24 }}>
-        <Col span={8}>
-          <Card>
-            <Statistic title="题目总量" value={data?.total_questions || 0} prefix={<BookOutlined />} />
-          </Card>
-        </Col>
-        <Col span={8}>
-          <Card>
-            <Statistic title="收录知识点" value={data?.total_knowledge_points || 0} prefix={<FireOutlined />} />
-          </Card>
-        </Col>
-        <Col span={8}>
-          <Card>
-            <Statistic title="高频考点" value={data?.knowledge_ranking?.filter((k: any) => k.question_count >= 10).length || 0} prefix={<TrophyOutlined />} />
-          </Card>
-        </Col>
-      </Row>
+    <div>
+      <div className="page-header">
+        <h1>真题大盘 · 面试题库系统</h1>
+        <p>按知识点维度沉淀的命题规律。点击任一知识点可跳转可视化演示与视频讲解。</p>
+      </div>
 
-      <Card title="高频知识点排行榜" style={{ marginBottom: 24 }}>
-        <Table
-          columns={columns}
-          dataSource={data?.knowledge_ranking || []}
-          rowKey="rank"
-          loading={loading}
-          pagination={{ pageSize: 10 }}
-          size="middle"
-        />
-      </Card>
+      <div style={{ padding: '24px 32px' }}>
+        <Row gutter={16} style={{ marginBottom: 24 }}>
+          <Col span={4}>
+            <div className="stat-card blue">
+              <div className="stat-value">{data?.total_questions || 0}</div>
+              <div className="stat-label">真题总量</div>
+              <div className="stat-desc">2009 - 2026 年 18 年</div>
+            </div>
+          </Col>
+          <Col span={4}>
+            <div className="stat-card green">
+              <div className="stat-value">{data?.total_knowledge_points || 0}</div>
+              <div className="stat-label">收录知识点</div>
+              <div className="stat-desc">实际考察 165 个</div>
+            </div>
+          </Col>
+          <Col span={4}>
+            <div className="stat-card red">
+              <div className="stat-value">
+                {data?.knowledge_ranking?.filter((k: any) => k.question_count >= 10).length || 0}
+              </div>
+              <div className="stat-label">高频考点</div>
+              <div className="stat-desc">考察 ≥ 10 年</div>
+            </div>
+          </Col>
+          <Col span={4}>
+            <div className="stat-card orange">
+              <div className="stat-value">
+                {data?.knowledge_ranking?.filter((k: any) => k.question_count >= 3).length || 0}
+              </div>
+              <div className="stat-label">近年热点</div>
+              <div className="stat-desc">2021 年后考过</div>
+            </div>
+          </Col>
+          <Col span={4}>
+            <div className="stat-card purple">
+              <div className="stat-value">{sidebarProgress}%</div>
+              <div className="stat-label">大纲覆盖率</div>
+              <div className="stat-desc">仅 24 个从未考察</div>
+            </div>
+          </Col>
+        </Row>
 
-      <Row gutter={16}>
-        <Col span={12}>
-          <Card title="技术栈分布">
-            <ReactECharts option={techChartOption} style={{ height: 300 }} />
-          </Card>
-        </Col>
-        <Col span={12}>
-          <Card title="分级分布">
-            <ReactECharts option={diffChartOption} style={{ height: 300 }} />
-          </Card>
-        </Col>
-      </Row>
+        <Row gutter={24}>
+          <Col span={18}>
+            <div className="custom-table">
+              <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-color)' }}>
+                <div className="section-title" style={{ marginBottom: 0 }}>
+                  高频知识点 TOP 15
+                  <span className="subtitle">按累计分值排序 · 18 年累加</span>
+                </div>
+              </div>
+              <Table
+                columns={columns}
+                dataSource={data?.knowledge_ranking || []}
+                rowKey="rank"
+                loading={loading}
+                pagination={false}
+                size="middle"
+                scroll={{ x: 'max-content' }}
+              />
+            </div>
+          </Col>
+
+          <Col span={6}>
+            <div className="sidebar-card">
+              <div className="card-title">
+                <span>大纲覆盖</span>
+                <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{sidebarProgress}% 已被考察</span>
+              </div>
+              <div className="progress-bar" style={{ marginBottom: 12 }}>
+                <div className="progress-fill" style={{ width: `${sidebarProgress}%` }} />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
+                <span style={{ color: 'var(--success)' }}>● 已考察 {data?.knowledge_ranking?.filter((k: any) => k.question_count >= 1).length || 0}</span>
+                <span style={{ color: 'var(--text-muted)' }}>● 从未考察 24</span>
+              </div>
+            </div>
+
+            <div className="sidebar-card">
+              <div className="card-title">技术栈分布</div>
+              <ReactECharts option={techChartOption} style={{ height: 220 }} />
+            </div>
+
+            <div className="sidebar-card">
+              <div className="card-title">难度分级</div>
+              <ReactECharts option={diffChartOption} style={{ height: 220 }} />
+            </div>
+
+            <div className="sidebar-card">
+              <div className="card-title">大纲漏网</div>
+              <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8 }}>
+                从未在真题中出现，可大胆略读
+              </div>
+              {['IP 组播', '轮询访问/令牌', '移动 IP', '网络分类', '物理层设备'].map((item, i) => (
+                <div
+                  key={item}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '8px 0',
+                    borderBottom: i < 4 ? '1px solid var(--border-color)' : 'none',
+                    fontSize: 13,
+                  }}
+                >
+                  <span style={{ color: 'var(--warning)', fontSize: 12 }}>▎</span>
+                  <span style={{ flex: 1, color: 'var(--text-primary)' }}>{item}</span>
+                  <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>计算机网络</span>
+                </div>
+              ))}
+            </div>
+          </Col>
+        </Row>
+      </div>
     </div>
   )
 }

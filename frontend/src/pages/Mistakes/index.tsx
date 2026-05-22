@@ -5,7 +5,9 @@ import {
   StarFilled,
   DeleteOutlined,
   RedoOutlined,
-  ArrowRightOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  FileTextOutlined,
 } from '@ant-design/icons'
 import { localStore, MistakeItem } from '@/utils/localStore'
 
@@ -82,104 +84,154 @@ const MistakesPage: React.FC = () => {
   }
 
   return (
-    <div style={{ padding: 24 }}>
-      <Card
-        title="错题本"
-        extra={<span style={{ color: '#999' }}>连续答对 3 次自动出本，每天少做点已经会的题</span>}
-      >
-        <Tabs
-          activeKey={activeTab}
-          onChange={setActiveTab}
-          items={[
-            {
-              key: 'active',
-              label: `活跃错题 ${activeList.length}`,
-              children: activeList.length > 0 ? (
-                <List
-                  dataSource={activeList}
-                  renderItem={(item: MistakeItem) => (
-                    <List.Item
-                      actions={[
-                        <Button size="small" type="primary" onClick={() => handleAnswer(item.questionId, true)}>
-                          答对
-                        </Button>,
-                        <Button size="small" danger onClick={() => handleAnswer(item.questionId, false)}>
-                          答错
-                        </Button>,
-                        <Button
-                          size="small"
-                          type="link"
-                          danger
-                          icon={<DeleteOutlined />}
-                          onClick={() => handleRemove(item.questionId)}
-                        >
-                          移除
-                        </Button>,
-                        <Button
-                          size="small"
-                          type="link"
-                          icon={item.isFavorite ? <StarFilled style={{ color: '#faad14' }} /> : <StarOutlined />}
-                          onClick={() => handleToggleFavorite(item.questionId)}
-                        >
-                          {item.isFavorite ? '取消' : '收藏'}
-                        </Button>,
-                      ]}
-                    >
-                      <List.Item.Meta
-                        title={item.questionContent || `题目 #${item.questionId}`}
-                        description={
-                          <Space>
-                            <span>错误次数：{item.mistakeCount} 次</span>
-                            <span>连续正确：{item.consecutiveCorrect} 次</span>
-                            <span>最后错误：{item.lastMistakeAt?.split('T')[0]}</span>
-                          </Space>
-                        }
-                      />
-                    </List.Item>
-                  )}
-                />
-              ) : (
-                <Empty description="暂无活跃错题，做题后答错的会自动加入" />
-              ),
-            },
-            {
-              key: 'mastered',
-              label: `已出本 ${masteredList.length}`,
-              children: masteredList.length > 0 ? (
-                <List
-                  dataSource={masteredList}
-                  renderItem={(item: MistakeItem) => (
-                    <List.Item
-                      actions={[
-                        <Button
-                          size="small"
-                          type="link"
-                          icon={<RedoOutlined />}
-                          onClick={() => handleRejoin(item.questionId)}
-                        >
-                          重新加入
-                        </Button>,
-                      ]}
-                    >
-                      <List.Item.Meta
-                        title={item.questionContent || `题目 #${item.questionId}`}
-                        description={
-                          <Space>
-                            <Tag color="green">已掌握</Tag>
-                            <span>出本时间：{item.masteredAt?.split('T')[0]}</span>
-                          </Space>
-                        }
-                      />
-                    </List.Item>
-                  )}
-                />
-              ) : (
-                <Empty description="暂无已出本记录" />
-              ),
-            },
-          ]}
-        />
-      </Card>
+    <div>
+      <div className="page-header">
+        <h1><FileTextOutlined style={{ marginRight: 8, color: 'var(--danger)' }} />错题本</h1>
+        <p>记录错题，反复练习。连续答对 3 次自动出本，每天少做点已经会的题。</p>
+      </div>
+
+      <div style={{ padding: '24px 32px' }}>
+        <div className="sidebar-card" style={{ padding: 0, overflow: 'hidden' }}>
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-color)' }}>
+            <div className="section-title" style={{ marginBottom: 0 }}>
+              错题管理
+              <span className="subtitle">连续答对 3 次自动出本</span>
+            </div>
+          </div>
+
+          <Tabs
+            activeKey={activeTab}
+            onChange={setActiveTab}
+            size="middle"
+            style={{ padding: '0 20px' }}
+            items={[
+              {
+                key: 'active',
+                label: `活跃错题 ${activeList.length}`,
+                children: activeList.length > 0 ? (
+                  <List
+                    dataSource={activeList}
+                    renderItem={(item: MistakeItem) => (
+                      <List.Item
+                        style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-color)' }}
+                        actions={[
+                          <Button
+                            size="small"
+                            type="primary"
+                            icon={<CheckCircleOutlined />}
+                            onClick={() => handleAnswer(item.questionId, true)}
+                            style={{ background: 'var(--success)', borderColor: 'var(--success)' }}
+                          >
+                            答对
+                          </Button>,
+                          <Button
+                            size="small"
+                            danger
+                            icon={<CloseCircleOutlined />}
+                            onClick={() => handleAnswer(item.questionId, false)}
+                          >
+                            答错
+                          </Button>,
+                          <Button
+                            size="small"
+                            type="text"
+                            danger
+                            icon={<DeleteOutlined />}
+                            onClick={() => handleRemove(item.questionId)}
+                          >
+                            移除
+                          </Button>,
+                          <Button
+                            size="small"
+                            type="text"
+                            icon={item.isFavorite ? <StarFilled style={{ color: '#faad14' }} /> : <StarOutlined />}
+                            onClick={() => handleToggleFavorite(item.questionId)}
+                          >
+                            {item.isFavorite ? '取消' : '收藏'}
+                          </Button>,
+                        ]}
+                      >
+                        <List.Item.Meta
+                          title={
+                            <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>
+                              {item.questionContent || `题目 #${item.questionId}`}
+                            </span>
+                          }
+                          description={
+                            <Space size={16} style={{ marginTop: 4 }}>
+                              <span style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
+                                错误次数：<span style={{ color: 'var(--danger)', fontWeight: 600 }}>{item.mistakeCount}</span> 次
+                              </span>
+                              <span style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
+                                连续正确：<span style={{ color: 'var(--success)', fontWeight: 600 }}>{item.consecutiveCorrect}</span> / 3
+                              </span>
+                              <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>
+                                最后错误：{item.lastMistakeAt?.split('T')[0]}
+                              </span>
+                            </Space>
+                          }
+                        />
+                      </List.Item>
+                    )}
+                  />
+                ) : (
+                  <Empty
+                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                    description="暂无活跃错题，做题后答错的会自动加入"
+                    style={{ padding: 60 }}
+                  />
+                ),
+              },
+              {
+                key: 'mastered',
+                label: `已出本 ${masteredList.length}`,
+                children: masteredList.length > 0 ? (
+                  <List
+                    dataSource={masteredList}
+                    renderItem={(item: MistakeItem) => (
+                      <List.Item
+                        style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-color)' }}
+                        actions={[
+                          <Button
+                            size="small"
+                            type="text"
+                            icon={<RedoOutlined />}
+                            onClick={() => handleRejoin(item.questionId)}
+                          >
+                            重新加入
+                          </Button>,
+                        ]}
+                      >
+                        <List.Item.Meta
+                          title={
+                            <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>
+                              {item.questionContent || `题目 #${item.questionId}`}
+                            </span>
+                          }
+                          description={
+                            <Space size={16} style={{ marginTop: 4 }}>
+                              <Tag color="success" style={{ fontSize: 12 }}>已掌握</Tag>
+                              <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>
+                                出本时间：{item.masteredAt?.split('T')[0]}
+                              </span>
+                            </Space>
+                          }
+                        />
+                      </List.Item>
+                    )}
+                  />
+                ) : (
+                  <Empty
+                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                    description="暂无已出本记录"
+                    style={{ padding: 60 }}
+                  />
+                ),
+              },
+            ]}
+          />
+        </div>
+      </div>
     </div>
   )
 }

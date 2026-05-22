@@ -10,6 +10,8 @@ import {
   UserOutlined,
   LoginOutlined,
   CloudSyncOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
 } from '@ant-design/icons'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
@@ -50,50 +52,93 @@ const AppLayout: React.FC = () => {
       ]
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
-      <Sider collapsible collapsed={collapsed} onCollapse={setCollapsed}>
+    <Layout style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}>
+      <Sider
+        trigger={null}
+        collapsible
+        collapsed={collapsed}
+        width={200}
+        style={{
+          background: '#fff',
+          borderRight: '1px solid var(--border-color)',
+          boxShadow: '2px 0 8px rgba(0,0,0,0.04)',
+          zIndex: 10,
+        }}
+      >
         <div
           style={{
-            height: 64,
+            height: 60,
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            color: '#fff',
-            fontSize: collapsed ? 16 : 20,
-            fontWeight: 'bold',
-            borderBottom: '1px solid rgba(255,255,255,0.1)',
+            justifyContent: collapsed ? 'center' : 'flex-start',
+            padding: collapsed ? 0 : '0 20px',
+            borderBottom: '1px solid var(--border-color)',
+            fontSize: collapsed ? 18 : 16,
+            fontWeight: 700,
+            color: 'var(--text-primary)',
+            gap: 8,
           }}
         >
-          {collapsed ? '面' : '马上面试'}
+          <span style={{ color: 'var(--primary)', fontSize: 20 }}>面</span>
+          {!collapsed && <span>马上面试</span>}
         </div>
         <Menu
-          theme="dark"
           mode="inline"
           selectedKeys={[location.pathname]}
           items={menuItems}
           onClick={handleMenuClick}
+          style={{
+            borderRight: 'none',
+            padding: '8px 0',
+          }}
+          theme="light"
         />
       </Sider>
-      <Layout>
+      <Layout style={{ background: 'var(--bg-primary)' }}>
         <Header
           style={{
             padding: '0 24px',
             background: '#fff',
             display: 'flex',
-            justifyContent: 'flex-end',
+            justifyContent: 'space-between',
             alignItems: 'center',
-            borderBottom: '1px solid #f0f0f0',
+            borderBottom: '1px solid var(--border-color)',
+            height: 60,
+            position: 'sticky',
+            top: 0,
+            zIndex: 9,
           }}
         >
+          <Button
+            type="text"
+            icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            onClick={() => setCollapsed(!collapsed)}
+            style={{ fontSize: 16 }}
+          />
           <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
-            <Button type="text" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Button
+              type="text"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                height: 40,
+                padding: '0 12px',
+                borderRadius: 20,
+                border: '1px solid var(--border-color)',
+              }}
+            >
               <Avatar size="small" icon={<UserOutlined />} src={user?.avatar_url} />
-              <span>{user?.nickname || '未登录'}</span>
-              {!user && <CloudSyncOutlined style={{ color: '#1677ff', fontSize: 12 }} />}
+              <span style={{ fontSize: 13, fontWeight: 500 }}>
+                {user?.nickname || '未登录'}
+              </span>
+              {!user && (
+                <CloudSyncOutlined style={{ color: 'var(--primary)', fontSize: 12 }} />
+              )}
             </Button>
           </Dropdown>
         </Header>
-        <Content style={{ margin: 0, background: '#f5f5f5', minHeight: 280 }}>
+        <Content style={{ padding: 0, background: 'var(--bg-primary)', minHeight: 'calc(100vh - 60px)' }}>
           <Outlet />
         </Content>
       </Layout>
@@ -104,6 +149,7 @@ const AppLayout: React.FC = () => {
           onCancel={() => setLoginOpen(false)}
           footer={null}
           title="登录以启用云端同步"
+          width={420}
         >
           <QRCodeLogin onSuccess={() => setLoginOpen(false)} />
         </Modal>

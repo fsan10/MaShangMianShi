@@ -1,11 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { Card, Row, Col, Statistic, Progress } from 'antd'
-import {
-  CheckCircleOutlined,
-  FireOutlined,
-  TrophyOutlined,
-  BookOutlined,
-} from '@ant-design/icons'
+import { Card, Row, Col, Statistic } from 'antd'
+import { CheckCircleOutlined, FireOutlined, TrophyOutlined, BookOutlined, RiseOutlined } from '@ant-design/icons'
 import ReactECharts from 'echarts-for-react'
 import { localStore } from '@/utils/localStore'
 import dayjs from 'dayjs'
@@ -63,6 +58,13 @@ const ProgressPage: React.FC = () => {
     tooltip: {},
     radar: {
       indicator: radarData.map((r) => ({ name: r.name, max: 100 })),
+      splitArea: {
+        areaStyle: {
+          color: ['rgba(22, 119, 255, 0.02)', 'rgba(22, 119, 255, 0.05)', 'rgba(22, 119, 255, 0.08)'],
+        },
+      },
+      axisLine: { lineStyle: { color: 'var(--border-color)' } },
+      splitLine: { lineStyle: { color: 'var(--border-color)' } },
     },
     series: [
       {
@@ -71,7 +73,9 @@ const ProgressPage: React.FC = () => {
           {
             value: radarData.map((r) => r.score),
             name: '掌握程度',
-            areaStyle: { opacity: 0.3 },
+            areaStyle: { opacity: 0.2, color: '#1677ff' },
+            lineStyle: { color: '#1677ff', width: 2 },
+            itemStyle: { color: '#1677ff' },
           },
         ],
       },
@@ -98,20 +102,25 @@ const ProgressPage: React.FC = () => {
       max: 1,
       type: 'piecewise',
       pieces: [
-        { value: 0, color: '#eee', label: '未打卡' },
+        { value: 0, color: '#f0f0f0', label: '未打卡' },
         { value: 1, color: '#52c41a', label: '已打卡' },
       ],
       orient: 'horizontal',
       left: 'center',
       top: 0,
+      itemWidth: 12,
+      itemHeight: 12,
+      textStyle: { fontSize: 11 },
     },
     calendar: {
       range: new Date().getFullYear().toString(),
       cellSize: ['auto', 14],
-      left: 40,
-      right: 40,
-      top: 60,
+      left: 30,
+      right: 30,
+      top: 50,
       yearLabel: { show: false },
+      itemStyle: { borderWidth: 2, borderColor: '#fff' },
+      splitLine: { show: false },
     },
     series: [
       {
@@ -123,62 +132,90 @@ const ProgressPage: React.FC = () => {
   }
 
   return (
-    <div style={{ padding: 24 }}>
-      <Row gutter={16} style={{ marginBottom: 24 }}>
-        <Col span={6}>
-          <Card>
-            <Statistic title="已做题数" value={stats.totalAnswered} prefix={<BookOutlined />} />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic title="正确率" value={accuracy} suffix="%" prefix={<CheckCircleOutlined />} />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic title="连续打卡" value={streakDays} suffix="天" prefix={<FireOutlined />} />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic title="已掌握" value={stats.masteredCount} suffix="个" prefix={<TrophyOutlined />} />
-          </Card>
-        </Col>
-      </Row>
+    <div>
+      <div className="page-header">
+        <h1><RiseOutlined style={{ marginRight: 8, color: 'var(--primary)' }} />学习进度</h1>
+        <p>追踪你的学习轨迹，掌握程度一目了然。坚持每日打卡，稳步提升。</p>
+      </div>
 
-      <Row gutter={16} style={{ marginBottom: 24 }}>
-        <Col span={12}>
-          <Card title="能力雷达">
-            {radarData.length > 0 ? (
-              <ReactECharts option={radarOption} style={{ height: 300 }} />
-            ) : (
-              <div style={{ textAlign: 'center', padding: 40, color: '#999' }}>开始做题后显示雷达图</div>
-            )}
-          </Card>
-        </Col>
-        <Col span={12}>
-          <Card title="365天打卡日历">
-            <ReactECharts option={calendarOption} style={{ height: 300 }} />
-          </Card>
-        </Col>
-      </Row>
-
-      <Card title="章节进度">
-        {chapters.length > 0 ? (
-          chapters.map((ch) => (
-            <div key={ch.name} style={{ marginBottom: 16 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                <span>{ch.name}</span>
-                <span>{ch.percentage}% ({ch.mastered}/{ch.total}题)</span>
-              </div>
-              <Progress percent={ch.percentage} strokeColor="#1677ff" />
+      <div style={{ padding: '24px 32px' }}>
+        <Row gutter={16} style={{ marginBottom: 24 }}>
+          <Col span={6}>
+            <div className="stat-card blue">
+              <div className="stat-value">{stats.totalAnswered}</div>
+              <div className="stat-label">已做题数</div>
+              <div className="stat-desc">累计答题记录</div>
             </div>
-          ))
-        ) : (
-          <div style={{ textAlign: 'center', padding: 40, color: '#999' }}>开始做题后显示进度</div>
-        )}
-      </Card>
+          </Col>
+          <Col span={6}>
+            <div className="stat-card green">
+              <div className="stat-value">{accuracy}%</div>
+              <div className="stat-label">正确率</div>
+              <div className="stat-desc">{stats.totalCorrect} / {stats.totalAnswered} 正确</div>
+            </div>
+          </Col>
+          <Col span={6}>
+            <div className="stat-card orange">
+              <div className="stat-value">{streakDays}</div>
+              <div className="stat-label">连续打卡</div>
+              <div className="stat-desc">天不间断</div>
+            </div>
+          </Col>
+          <Col span={6}>
+            <div className="stat-card purple">
+              <div className="stat-value">{stats.masteredCount}</div>
+              <div className="stat-label">已掌握</div>
+              <div className="stat-desc">个知识点</div>
+            </div>
+          </Col>
+        </Row>
+
+        <Row gutter={24} style={{ marginBottom: 24 }}>
+          <Col span={12}>
+            <div className="sidebar-card">
+              <div className="card-title">能力雷达</div>
+              {radarData.length > 0 ? (
+                <ReactECharts option={radarOption} style={{ height: 320 }} />
+              ) : (
+                <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-muted)' }}>
+                  <BookOutlined style={{ fontSize: 32, marginBottom: 12 }} />
+                  <div>开始做题后显示雷达图</div>
+                </div>
+              )}
+            </div>
+          </Col>
+          <Col span={12}>
+            <div className="sidebar-card">
+              <div className="card-title">365天打卡日历</div>
+              <ReactECharts option={calendarOption} style={{ height: 320 }} />
+            </div>
+          </Col>
+        </Row>
+
+        <div className="sidebar-card">
+          <div className="card-title">章节进度</div>
+          {chapters.length > 0 ? (
+            chapters.map((ch) => (
+              <div key={ch.name} style={{ marginBottom: 20 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, alignItems: 'center' }}>
+                  <span style={{ fontWeight: 600, fontSize: 14 }}>{ch.name}</span>
+                  <span style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
+                    {ch.percentage}% ({ch.mastered}/{ch.total}题)
+                  </span>
+                </div>
+                <div className="progress-bar">
+                  <div className="progress-fill" style={{ width: `${ch.percentage}%` }} />
+                </div>
+              </div>
+            ))
+          ) : (
+            <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-muted)' }}>
+              <BookOutlined style={{ fontSize: 32, marginBottom: 12 }} />
+              <div>开始做题后显示进度</div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

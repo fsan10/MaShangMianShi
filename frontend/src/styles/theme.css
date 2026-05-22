@@ -1,0 +1,282 @@
+:root {
+  --primary: #1677ff;
+  --primary-light: #e6f4ff;
+  --success: #52c41a;
+  --success-light: #f6ffed;
+  --warning: #fa8c16;
+  --warning-light: #fff7e6;
+  --danger: #f5222d;
+  --danger-light: #fff1f0;
+  --gold: #faad14;
+  --silver: #bfbfbf;
+  --bronze: #d48806;
+  --text-primary: #1f2329;
+  --text-secondary: #5e6670;
+  --text-muted: #8f959e;
+  --bg-primary: #f5f7fa;
+  --bg-card: #ffffff;
+  --border-color: #e4e6eb;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.08);
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Stat Card with left border */
+.stat-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: 20px 24px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.stat-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+}
+
+.stat-card.blue::before { background: var(--primary); }
+.stat-card.green::before { background: var(--success); }
+.stat-card.red::before { background: var(--danger); }
+.stat-card.orange::before { background: var(--warning); }
+.stat-card.purple::before { background: #722ed1; }
+
+.stat-card .stat-value {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+
+.stat-card.blue .stat-value { color: var(--primary); }
+.stat-card.green .stat-value { color: var(--success); }
+.stat-card.red .stat-value { color: var(--danger); }
+.stat-card.orange .stat-value { color: var(--warning); }
+.stat-card.purple .stat-value { color: #722ed1; }
+
+.stat-card .stat-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.stat-card .stat-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* Rank badges */
+.rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.rank-badge.gold { background: linear-gradient(135deg, #ffd700, #ffb800); }
+.rank-badge.silver { background: linear-gradient(135deg, #c0c0c0, #a0a0a0); }
+.rank-badge.bronze { background: linear-gradient(135deg, #cd7f32, #b87333); }
+.rank-badge.normal { background: var(--border-color); color: var(--text-secondary); }
+
+/* Subject tags */
+.subject-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid;
+}
+
+.subject-tag.ds { color: #1677ff; background: #e6f4ff; border-color: #bae0ff; }
+.subject-tag.os { color: #52c41a; background: #f6ffed; border-color: #b7eb8f; }
+.subject-tag.cn { color: #fa8c16; background: #fff7e6; border-color: #ffd591; }
+.subject-tag.co { color: #722ed1; background: #f9f0ff; border-color: #d3adf7; }
+
+/* Year blocks */
+.year-block {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #fff;
+  background: var(--primary);
+  margin-right: 2px;
+}
+
+.year-block.missing {
+  background: var(--border-color);
+  color: var(--text-muted);
+}
+
+/* Action buttons */
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid var(--border-color);
+  background: #fff;
+  color: var(--text-secondary);
+}
+
+.action-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.action-btn.primary {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.action-btn.primary:hover {
+  background: #4096ff;
+}
+
+/* Section title */
+.section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-title .subtitle {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+/* Custom table */
+.custom-table {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.custom-table .ant-table-thead > tr > th {
+  background: var(--bg-primary);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-color);
+  padding: 12px 16px;
+}
+
+.custom-table .ant-table-tbody > tr > td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 13px;
+}
+
+.custom-table .ant-table-tbody > tr:hover > td {
+  background: #fafbfc;
+}
+
+/* Sidebar card */
+.sidebar-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 16px;
+}
+
+.sidebar-card .card-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Progress bar */
+.progress-bar {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--border-color);
+  overflow: hidden;
+}
+
+.progress-bar .progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--primary), #69b1ff);
+  transition: width 0.5s ease;
+}
+
+/* Page header */
+.page-header {
+  background: var(--bg-card);
+  padding: 24px 32px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.page-header h1 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.page-header p {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
