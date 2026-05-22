@@ -9,6 +9,9 @@ import OJPage from '@/pages/OJ'
 import ProgressPage from '@/pages/Progress'
 import ReviewPage from '@/pages/Review'
 import MistakesPage from '@/pages/Mistakes'
+import QuestionManage from '@/pages/Questions'
+import AIRecognize from '@/pages/AIRecognize'
+import Projects from '@/pages/Projects'
 
 const App: React.FC = () => {
   return (
@@ -19,6 +22,9 @@ const App: React.FC = () => {
             <Route path="/" element={<AppLayout />}>
               <Route index element={<Navigate to="/dashboard" replace />} />
               <Route path="dashboard" element={<Dashboard />} />
+              <Route path="questions" element={<QuestionManage />} />
+              <Route path="ai" element={<AIRecognize />} />
+              <Route path="projects" element={<Projects />} />
               <Route path="oj" element={<OJPage />} />
               <Route path="progress" element={<ProgressPage />} />
               <Route path="review" element={<ReviewPage />} />

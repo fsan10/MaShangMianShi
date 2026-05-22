@@ -13,6 +13,10 @@ export const questionApi = {
   create: (data: unknown) => api.post('/questions/', data),
   update: (id: number, data: unknown) => api.put(`/questions/${id}`, data),
   delete: (id: number) => api.delete(`/questions/${id}`),
+  batchImport: (questions: unknown[]) => api.post('/questions/batch-import', { questions }),
+  categories: () => api.get('/questions/categories/list'),
+  sources: () => api.get('/questions/sources/list'),
+  difficulties: () => api.get('/questions/difficulties/list'),
 }
 
 export const statsApi = {
@@ -60,4 +64,39 @@ export const mistakesApi = {
 export const syncApi = {
   upload: (data: Record<string, unknown>) => api.post('/sync/upload', { data }),
   download: () => api.get('/sync/download'),
+}
+
+export const aiApi = {
+  recognizeInterview: (file: File, categoryId?: number) => {
+    const form = new FormData()
+    form.append('file', file)
+    if (categoryId) form.append('category_id', String(categoryId))
+    return api.post('/ai/recognize/interview', form, { headers: { 'Content-Type': 'multipart/form-data' } })
+  },
+  recognizeWritten: (file: File, categoryId?: number) => {
+    const form = new FormData()
+    form.append('file', file)
+    if (categoryId) form.append('category_id', String(categoryId))
+    return api.post('/ai/recognize/written', form, { headers: { 'Content-Type': 'multipart/form-data' } })
+  },
+  recognizeProject: (file: File) => {
+    const form = new FormData()
+    form.append('file', file)
+    return api.post('/ai/recognize/project', form, { headers: { 'Content-Type': 'multipart/form-data' } })
+  },
+  saveImport: (questions: unknown[]) => api.post('/ai/import/save', questions),
+}
+
+export const projectApi = {
+  list: () => api.get('/projects/'),
+  create: (data: unknown) => api.post('/projects/', data),
+  get: (id: number) => api.get(`/projects/${id}`),
+  update: (id: number, data: unknown) => api.put(`/projects/${id}`, data),
+  delete: (id: number) => api.delete(`/projects/${id}`),
+  linkQuestions: (projectId: number, questionIds: number[]) =>
+    api.post(`/projects/${projectId}/questions`, { question_ids: questionIds }),
+  getQuestions: (projectId: number) => api.get(`/projects/${projectId}/questions`),
+  unlinkQuestion: (projectId: number, questionId: number) =>
+    api.delete(`/projects/${projectId}/questions/${questionId}`),
+  autoMatch: (projectId: number) => api.post(`/projects/${projectId}/auto-match`),
 }

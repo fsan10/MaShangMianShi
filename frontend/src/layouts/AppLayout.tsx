@@ -12,6 +12,9 @@ import {
   CloudSyncOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  QuestionCircleOutlined,
+  RobotOutlined,
+  LinkOutlined,
 } from '@ant-design/icons'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
@@ -28,6 +31,9 @@ const AppLayout: React.FC = () => {
 
   const menuItems = [
     { key: '/dashboard', icon: <DashboardOutlined />, label: '统计大盘' },
+    { key: '/questions', icon: <QuestionCircleOutlined />, label: '问题管理' },
+    { key: '/ai', icon: <RobotOutlined />, label: 'AI 识别' },
+    { key: '/projects', icon: <LinkOutlined />, label: '项目关联' },
     { key: '/oj', icon: <CodeOutlined />, label: '在线OJ' },
     { key: '/progress', icon: <BookOutlined />, label: '学习进度' },
     { key: '/review', icon: <ThunderboltOutlined />, label: '巩固功能' },

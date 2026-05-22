@@ -13,6 +13,8 @@ from app.routers import (
     wechat_router,
 )
 from app.routers.sync import router as sync_router
+from app.routers.ai import router as ai_router
+from app.routers.projects import router as projects_router
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -39,6 +41,8 @@ app.include_router(review_router, prefix="/api/v1")
 app.include_router(mistakes_router, prefix="/api/v1")
 app.include_router(wechat_router, prefix="/api/v1")
 app.include_router(sync_router, prefix="/api/v1")
+app.include_router(ai_router, prefix="/api/v1")
+app.include_router(projects_router, prefix="/api/v1")
 
 
 @app.get("/api/v1/health")

@@ -66,3 +66,12 @@ class QuestionOut(QuestionBase):
 
     class Config:
         from_attributes = True
+
+
+class QuestionBatchImport(BaseModel):
+    questions: List[QuestionCreate]
+
+
+class QuestionSearchResult(BaseModel):
+    total: int
+    items: List[QuestionOut]
