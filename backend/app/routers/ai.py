@@ -8,6 +8,7 @@ from sqlalchemy import select
 
 from app.core.database import get_db
 from app.core.config import settings
+from app.core.security import get_current_user_id
 from app.models.models import Question, ImportLog, Category
 from app.schemas.question import QuestionCreate
 
