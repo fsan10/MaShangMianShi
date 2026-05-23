@@ -68,16 +68,61 @@
 
 - Python 3.12+
 - Node.js 20+
-- PostgreSQL 16+
-- Redis 7+
+- PostgreSQL 16+（或使用 Docker）
+- Redis 7+（或使用 Docker）
 
-### 1. 启动数据库
+### 一键启动（推荐）
+
+项目根目录已配置 `package.json`，使用 `concurrently` 实现跨平台一键启动，Windows / macOS / Linux 通用。
+
+```bash
+# 1. 安装根目录依赖（仅需一次）
+npm install
+
+# 2. 启动数据库（Docker 方式）
+npm run db:up
+
+# 3. 安装前后端依赖 + 数据库迁移（仅需一次，或依赖变更时重新执行）
+npm run setup
+
+# 4. 一键启动前后端 🚀
+npm run dev
+```
+
+启动后控制台会同时显示后端（蓝色）和前端（绿色）的日志输出。
+
+### 可用命令
+
+| 命令 | 说明 |
+|------|------|
+| `npm run dev` | 同时启动后端 + 前端（开发模式） |
+| `npm run dev:backend` | 只启动后端 |
+| `npm run dev:frontend` | 只启动前端 |
+| `npm run db:up` | 启动 Docker 数据库（PostgreSQL + Redis） |
+| `npm run db:down` | 停止 Docker 数据库 |
+| `npm run db:migrate` | 运行数据库迁移 |
+| `npm run setup` | 一键安装所有依赖 |
+| `npm run build` | 构建前端生产版本 |
+
+### 访问地址
+
+- 前端页面：http://localhost:5173
+- 后端 API 文档：http://localhost:8000/api/docs
+
+### 分步启动（备选）
+
+如果不使用一键启动，也可以分别启动各服务：
+
+<details>
+<summary>点击展开分步说明</summary>
+
+**1. 启动数据库**
 
 ```bash
 docker-compose up postgres redis -d
 ```
 
-### 2. 后端
+**2. 后端**
 
 ```bash
 cd backend
@@ -96,7 +141,7 @@ alembic upgrade head
 uvicorn app.main:app --reload --port 8000
 ```
 
-### 3. 前端
+**3. 前端**
 
 ```bash
 cd frontend
@@ -108,12 +153,9 @@ npm install
 npm run dev
 ```
 
-### 4. 访问
+</details>
 
-- 前端页面：http://localhost:5173
-- 后端 API 文档：http://localhost:8000/api/docs
-
-### Docker 一键部署
+### Docker 一键部署（生产环境）
 
 ```bash
 docker-compose up --build
@@ -123,6 +165,7 @@ docker-compose up --build
 
 ```
 MaShangMianShi/
+├── package.json              # 根目录 npm 配置（一键启动）
 ├── docker-compose.yml
 ├── backend/
 │   ├── Dockerfile
