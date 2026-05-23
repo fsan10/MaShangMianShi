@@ -78,3 +78,8 @@ logs/
 
 # Upload files
 uploads/
+
+# Dev docs
+*v5*.md
+*v6*.md
+面试题库系统开发文档_*.md
