@@ -1,66 +1,49 @@
-# 马上面试 - 面试题库系统
+# 马上面试 - 面试题库系统（MVP）
 
-面试题库系统，带后端的完整题库管理平台。支持 AI 智能识别、在线 SQL 练习、学习进度追踪、巩固练习、错题本等功能。
+面试题库管理平台，支持 AI 智能导入、艾宾浩斯遗忘曲线学习巩固、微信扫码登录。后台管理独立部署，与用户端完全分离。
 
 ## 技术栈
 
 | 层级 | 技术 |
 |------|------|
-| 前端 | React 18 + TypeScript + Ant Design 5 + ECharts |
+| 用户端 | React 18 + TypeScript + Ant Design 5 + ECharts |
+| 管理端 | React 18 + TypeScript + Ant Design 5（独立部署） |
 | 后端 | Python FastAPI + SQLAlchemy 2.0 (async) + Alembic |
 | 数据库 | PostgreSQL 16 + Redis 7 |
 | 部署 | Docker Compose + Nginx |
 
 ## 功能模块
 
-### 统计大盘
-- 真题总量、收录知识点、高频考点统计
-- 高频知识点 TOP 15 排行榜（排名徽章、学科标签、年份分布方块）
+### 用户端（frontend）
+
+**题目列表**
+- 面试题 / 笔试题双 Tab 切换
+- 按关键词、公司、难度筛选
+- 卡片式布局，左侧色条标识难度，hover 动效
+
+**统计大盘**
+- 真题总量、收录知识点、高频考点统计卡片（大数字 + 标题 + 副标题 + 左侧色条）
+- 面试高频知识点排行榜
 - 技术栈分布饼图、难度分级饼图
 
-### 问题管理
-- 面试题 / 笔试题 CRUD
-- JSON 批量导入
-- 按题型 / 难度 / 来源 / 关键词 / 标签筛选
-
-### AI 智能识别
-- **面试题识别**：上传文件 → AI 提取面试题 → JSON 预览 → 一键入库
-- **笔试题识别**：上传文件 → AI 提取笔试题 → JSON 预览 → 一键入库
-- **项目识别**：上传简历 → AI 提取项目经历 → JSON 预览 → 一键入库
-- 支持 PDF / Word / Excel / TXT / Markdown 格式
-
-### 项目关联
-- 项目经历管理（名称、描述、技术栈、职责）
-- 根据技术栈自动匹配相关面试 / 笔试问题
-- 手动关联 / 取消关联题目
-
-### 在线 OJ
-- SQL 在线编辑器
-- 实时运行验证
-- 查看参考答案
-- 提交记录追踪
-
-### 学习进度
-- 已做题数、正确率、连续打卡、已掌握统计
-- 能力雷达图
+**学习巩固**
+- 艾宾浩斯遗忘曲线：1天 → 3天 → 7天 → 15天间隔复习
+- 5 次全部通过 = 已掌握，答错重置回第 1 阶段
+- 已学习 / 已掌握 / 今日待复习 / 连续打卡统计
 - 365 天打卡日历
-- 章节进度条
 
-### 巩固功能
-- 按学科分类的知识点卡片
-- 掌握进度追踪
-- 薄弱项分析
+**登录**
+- 弹窗模式（微信扫码 + 验证码）
+- 未登录可浏览题目，登录后同步学习进度
 
-### 错题本
-- 本地存储，无需登录即可使用
-- 答对 / 答错记录
-- 连续答对 3 次自动出本
-- 收藏、移除、重新加入
+### 管理端（admin）
 
-### 微信登录 & 云端同步
-- 微信公众号扫码登录
-- 登录后可云端同步本地数据
-- 所有功能无需登录即可使用
+- 独立部署，端口 5174，与用户端完全分离
+- 管理员账号密码登录
+- **题目管理**：CRUD + 搜索筛选 + 前端序号
+- **新增/编辑**：弹窗模式，表单分基本信息 / 答案信息 / 考察公司三区
+- **AI 批量导入**：弹窗模式，3 步向导（上传 → AI 识别 → 确认入库）
+- 考察次数 = 公司出现数（QuestionCompany 关联表）
 
 ## 快速开始
 
@@ -71,50 +54,48 @@
 - PostgreSQL 16+（或使用 Docker）
 - Redis 7+（或使用 Docker）
 
-### 一键启动（推荐）
-
-项目根目录已配置 `package.json`，使用 `concurrently` 实现跨平台一键启动，Windows / macOS / Linux 通用。
+### 一键启动
 
 ```bash
 # 1. 安装根目录依赖（仅需一次）
 npm install
 
-# 2. 启动数据库（Docker 方式）
+# 2. 启动数据库
 npm run db:up
 
-# 3. 安装前后端依赖 + 数据库迁移（仅需一次，或依赖变更时重新执行）
+# 3. 安装前后端依赖
 npm run setup
 
-# 4. 一键启动前后端 🚀
+# 4. 一键启动 🚀
 npm run dev
 ```
 
-启动后控制台会同时显示后端（蓝色）和前端（绿色）的日志输出。
+启动后控制台同时显示三个服务日志：
+
+| 标签 | 颜色 | 服务 | 地址 |
+|------|------|------|------|
+| `[backend]` | 蓝色 | FastAPI 后端 | http://localhost:8000 |
+| `[frontend]` | 绿色 | 用户端前端 | http://localhost:5173 |
+| `[admin]` | 品红色 | 管理端前端 | http://localhost:5174 |
 
 ### 可用命令
 
 | 命令 | 说明 |
 |------|------|
-| `npm run dev` | 同时启动后端 + 前端（开发模式） |
+| `npm run dev` | 同时启动后端 + 用户端 + 管理端 |
 | `npm run dev:backend` | 只启动后端 |
-| `npm run dev:frontend` | 只启动前端 |
-| `npm run db:up` | 启动 Docker 数据库（PostgreSQL + Redis） |
+| `npm run dev:frontend` | 只启动用户端 |
+| `npm run dev:admin` | 只启动管理端 |
+| `npm run db:up` | 启动 Docker 数据库 |
 | `npm run db:down` | 停止 Docker 数据库 |
 | `npm run db:migrate` | 运行数据库迁移 |
 | `npm run setup` | 一键安装所有依赖 |
 | `npm run build` | 构建前端生产版本 |
 
-### 访问地址
-
-- 前端页面：http://localhost:5173
-- 后端 API 文档：http://localhost:8000/api/docs
-
-### 分步启动（备选）
-
-如果不使用一键启动，也可以分别启动各服务：
+### 分步启动
 
 <details>
-<summary>点击展开分步说明</summary>
+<summary>点击展开</summary>
 
 **1. 启动数据库**
 
@@ -126,100 +107,109 @@ docker-compose up postgres redis -d
 
 ```bash
 cd backend
-
-# 安装依赖
 pip install -r requirements.txt
-
-# 配置环境变量
 cp .env.example .env
 # 编辑 .env 填入数据库连接、微信配置、AI 配置等
-
-# 数据库迁移
 alembic upgrade head
-
-# 启动开发服务器
 uvicorn app.main:app --reload --port 8000
 ```
 
-**3. 前端**
+**3. 用户端**
 
 ```bash
 cd frontend
-
-# 安装依赖
 npm install
+npm run dev
+```
 
-# 启动开发服务器
+**4. 管理端**
+
+```bash
+cd admin
+npm install
 npm run dev
 ```
 
 </details>
 
-### Docker 一键部署（生产环境）
+### 默认管理员账号
 
-```bash
-docker-compose up --build
-```
+- 用户名：`admin`
+- 密码：`admin123`
 
 ## 项目结构
 
 ```
 MaShangMianShi/
-├── package.json              # 根目录 npm 配置（一键启动）
+├── package.json                  # 根目录 npm 配置（一键启动）
 ├── docker-compose.yml
 ├── backend/
 │   ├── Dockerfile
 │   ├── requirements.txt
 │   ├── alembic.ini
-│   ├── alembic/
-│   │   ├── env.py
-│   │   ├── script.py.mako
-│   │   └── versions/          # 数据库迁移脚本
 │   └── app/
-│       ├── main.py            # FastAPI 入口
+│       ├── main.py               # FastAPI 入口
 │       ├── core/
-│       │   ├── config.py      # 配置管理
-│       │   ├── database.py    # 数据库连接
-│       │   └── security.py    # JWT 认证
+│       │   ├── config.py         # 配置管理（pydantic-settings）
+│       │   ├── database.py       # 异步数据库连接
+│       │   └── security.py       # JWT 认证
 │       ├── models/
-│       │   └── models.py      # 17 张数据表模型
-│       ├── schemas/           # Pydantic 请求/响应模型
-│       └── routers/           # API 路由
-│           ├── auth.py        # 微信登录
-│           ├── questions.py   # 问题管理 + 搜索筛选
-│           ├── ai.py          # AI 智能识别
-│           ├── projects.py    # 项目关联
-│           ├── stats.py       # 统计大盘
-│           ├── oj.py          # 在线 OJ
-│           ├── progress.py    # 学习进度
-│           ├── review.py      # 巩固功能
-│           ├── mistakes.py    # 错题本
-│           ├── wechat.py      # 微信回调
-│           └── sync.py        # 云端同步
-└── frontend/
-    ├── Dockerfile
-    ├── nginx.conf
+│       │   └── models.py         # 11 张数据表
+│       ├── schemas/              # Pydantic 请求/响应模型
+│       │   ├── admin.py
+│       │   ├── question.py
+│       │   ├── stats.py
+│       │   └── study.py
+│       └── routers/              # API 路由
+│           ├── admin.py          # 管理员登录 + 题目 CRUD
+│           ├── ai.py             # AI 智能识别
+│           ├── auth.py           # 微信扫码登录
+│           ├── questions.py      # 题目列表 + 详情
+│           ├── stats.py          # 统计大盘
+│           ├── study.py          # 学习巩固（艾宾浩斯）
+│           └── wechat.py         # 微信回调
+├── frontend/                     # 用户端（端口 5173）
+│   ├── package.json
+│   ├── vite.config.ts
+│   └── src/
+│       ├── App.tsx               # 路由配置
+│       ├── api/                  # API 客户端（token 认证）
+│       ├── contexts/             # AuthContext
+│       ├── layouts/              # AppLayout（侧边栏 + 登录弹窗）
+│       └── pages/
+│           ├── Home/             # 题目列表（卡片式）
+│           ├── Dashboard/        # 统计大盘
+│           ├── Study/            # 学习巩固
+│           ├── QuestionDetail/   # 题目详情
+│           └── Login/            # 登录弹窗
+└── admin/                        # 管理端（端口 5174）
     ├── package.json
     ├── vite.config.ts
     └── src/
-        ├── App.tsx            # 路由配置
-        ├── main.tsx
-        ├── api/               # API 客户端
-        ├── contexts/          # Auth 上下文
-        ├── utils/             # 本地存储工具
-        ├── styles/            # 全局主题
-        ├── layouts/           # 侧边栏布局
-        └── pages/             # 页面组件
-            ├── Dashboard/     # 统计大盘
-            ├── Questions/     # 问题管理
-            ├── AIRecognize/   # AI 识别
-            ├── Projects/      # 项目关联
-            ├── OJ/            # 在线 OJ
-            ├── Progress/      # 学习进度
-            ├── Review/        # 巩固功能
-            ├── Mistakes/      # 错题本
-            └── Login/         # 微信扫码登录
+        ├── App.tsx               # 路由配置
+        ├── api/                  # API 客户端（admin_token 认证）
+        ├── layouts/              # AdminLayout（独立侧边栏）
+        └── pages/
+            ├── Login.tsx         # 管理员登录页
+            └── Questions.tsx     # 题目管理（含弹窗：新增/编辑/AI导入）
 ```
+
+## 数据库模型
+
+| 表名 | 说明 |
+|------|------|
+| `users` | 用户表（微信登录） |
+| `admins` | 管理员表 |
+| `login_codes` | 登录验证码 |
+| `categories` | 分类 |
+| `knowledge_points` | 知识点 |
+| `questions` | 题目（面试/笔试） |
+| `knowledge_point_questions` | 知识点-题目关联 |
+| `question_companies` | 题目-公司关联（考察次数 = 公司数） |
+| `company_knowledge_stats` | 公司知识点统计 |
+| `study_records` | 学习记录（艾宾浩斯阶段） |
+| `checkins` | 打卡记录 |
+| `import_logs` | 导入日志 |
 
 ## 环境变量
 
@@ -228,12 +218,13 @@ MaShangMianShi/
 | `DATABASE_URL` | PostgreSQL 异步连接 | `postgresql+asyncpg://postgres:postgres@localhost:5432/mashangmianshi` |
 | `REDIS_URL` | Redis 连接 | `redis://localhost:6379/0` |
 | `SECRET_KEY` | JWT 密钥 | 需修改 |
+| `DEBUG` | 调试模式 | `False` |
 | `WECHAT_APP_ID` | 微信公众号 AppID | - |
 | `WECHAT_APP_SECRET` | 微信公众号 AppSecret | - |
 | `AI_API_URL` | AI API 地址 | - |
 | `AI_API_KEY` | AI API Key | - |
 | `AI_MODEL_NAME` | AI 模型名称 | - |
-| `CORS_ORIGINS` | 允许的前端域名 | `["http://localhost:3000","http://localhost:5173"]` |
+| `CORS_ORIGINS` | 允许的前端域名 | `["http://localhost:5173","http://localhost:5174"]` |
 
 ## License
 
