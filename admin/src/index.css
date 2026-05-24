@@ -1,0 +1,91 @@
+:root {
+  --primary: #1677ff;
+  --primary-light: #e6f4ff;
+  --danger: #ff4d4f;
+  --success: #52c41a;
+  --warning: #faad14;
+  --text-primary: #1f1f1f;
+  --text-secondary: #595959;
+  --text-muted: #8c8c8c;
+  --bg-primary: #f0f2f5;
+  --bg-secondary: #fafafa;
+  --border-color: #f0f0f0;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
+    Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+}
+
+.page-header {
+  padding: 24px 32px 0;
+}
+
+.page-header h1 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.page-header p {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.custom-table {
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+}
+
+.card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.section-title .subtitle {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-muted);
+  margin-left: 8px;
+}
+
+.admin-login-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 48px 40px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.08);
+  width: 420px;
+}
+
+.admin-login-card .ant-input-affix-wrapper,
+.admin-login-card .ant-input {
+  border-radius: 8px;
+}
+
+.admin-login-card .ant-btn-primary {
+  border-radius: 8px;
+  height: 44px;
+  font-size: 15px;
+  font-weight: 600;
+}
